@@ -10,20 +10,18 @@ const connectDB = require("./connectDB");
 const ApplicationRoutes = require("./Routes/ApplicationRoutes");
 require("dotenv").config();
 
-// Validate Environment Variables
-if (!process.env.PORT || !process.env.MONGO_URI) {
-  console.error("❌ Missing required environment variables. Check .env file.");
-  process.exit(1);
-}
-
 // Initialize Express App
 const app = express();
+
+// Enable trust proxy for rate-limit and other middlewares
+app.set("trust proxy", 1);
 
 // Enable Security Headers
 app.use(helmet());
 
 // CORS Configuration - Restrict Allowed Origins
 const corsOptions = {
+  origin: process.env.ALLOWED_ORIGINS?.split(",") || ["https://yourtrusteddomain.com"],
   methods: "GET,POST,PUT,DELETE",
   allowedHeaders: "Content-Type,Authorization",
   credentials: true,
