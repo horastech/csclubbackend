@@ -1,26 +1,70 @@
-// Importing
-const express = require('express');
-const cors = require('cors');
+// Importing Dependencies
+const express = require("express");
+const cors = require("cors");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
+const hpp = require("hpp");
+const xssClean = require("xss-clean");
+const mongoSanitize = require("express-mongo-sanitize");
 const connectDB = require("./connectDB");
-const ApplicationRoutes = require('./Routes/ApplicationRoutes');
+const ApplicationRoutes = require("./Routes/ApplicationRoutes");
 require("dotenv").config();
 
-// App
+// Validate Environment Variables
+if (!process.env.PORT || !process.env.DB_URI) {
+  console.error("❌ Missing required environment variables. Check .env file.");
+  process.exit(1);
+}
+
+// Initialize Express App
 const app = express();
 
-// Middleware
-app.use(cors());
-app.use(express.json({ limit: '10mb' }));
+// Enable Security Headers
+app.use(helmet());
 
-// Routes
-app.use("/api", ApplicationRoutes);
+// CORS Configuration - Restrict Allowed Origins
+const corsOptions = {
+  origin: process.env.ALLOWED_ORIGINS?.split(",") || ["https://csclubbackend-production.up.railway.app/api/addApp"],
+  methods: "GET,POST,PUT,DELETE",
+  allowedHeaders: "Content-Type,Authorization",
+  credentials: true,
+};
+app.use(cors(corsOptions));
 
-// DB Connection
+// Prevent XSS Attacks (Sanitize Input)
+app.use(xssClean());
+
+// Prevent NoSQL Injection & Sanitize Data
+app.use(mongoSanitize());
+
+// Prevent HTTP Parameter Pollution
+app.use(hpp());
+
+// Rate Limiting (DDoS Protection)
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per window
+  message: "⚠️ Too many requests, please try again later.",
+});
+app.use(limiter);
+
+// JSON Payload Protection (Limit Upload Size & Prevent Parsing Attacks)
+app.use(express.json({ limit: "5mb", strict: true }));
+
+// Connect to Database
 connectDB();
 
-// Running The Server
-const PORT = process.env.PORT || 5000;
+// Secure Routes
+app.use("/api", ApplicationRoutes);
 
+// Global Error Handling Middleware
+app.use((err, req, res, next) => {
+  console.error("❌ Error:", err);
+  res.status(500).json({ success: false, message: "Internal Server Error" });
+});
+
+// Start the Server
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Obour CS Club is running now on port: ${PORT}`);
+  console.log(`✅ Secure Server is running on port: ${PORT}`);
 });
