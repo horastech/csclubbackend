@@ -24,7 +24,7 @@ app.use(helmet());
 
 // CORS Configuration - Restrict Allowed Origins
 const corsOptions = {
-  origin: process.env.ALLOWED_ORIGINS?.split(",") || ["https://csclubbackend-production.up.railway.app/api/addApp"],
+  origin: process.env.ALLOWED_ORIGINS?.split(",") || ["https://csclubbackend-production.up.railway.app/"],
   methods: "GET,POST,PUT,DELETE",
   allowedHeaders: "Content-Type,Authorization",
   credentials: true,
