@@ -11,7 +11,7 @@ const ApplicationRoutes = require("./Routes/ApplicationRoutes");
 require("dotenv").config();
 
 // Validate Environment Variables
-if (!process.env.PORT || !process.env.DB_URI) {
+if (!process.env.PORT || !process.env.MONGO_URI) {
   console.error("❌ Missing required environment variables. Check .env file.");
   process.exit(1);
 }
@@ -24,7 +24,6 @@ app.use(helmet());
 
 // CORS Configuration - Restrict Allowed Origins
 const corsOptions = {
-  origin: process.env.ALLOWED_ORIGINS?.split(",") || ["https://csclubbackend-production.up.railway.app/"],
   methods: "GET,POST,PUT,DELETE",
   allowedHeaders: "Content-Type,Authorization",
   credentials: true,
